@@ -1,0 +1,2 @@
+# StaticsCalculator
+Calculadora de estática 
