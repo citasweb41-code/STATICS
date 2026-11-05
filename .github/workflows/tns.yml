@@ -1,0 +1,49 @@
+# Genera los documentos .tns para la TI-Nspire CX II usando Luna
+# (convertidor libre de scripts Python a documentos TNS, MPL 1.1).
+# Se ejecuta SOLO manualmente: pestaña Actions > "Generar .tns" > Run workflow.
+name: Generar .tns
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Empaquetar y probar
+        run: |
+          pip install pillow
+          python tools/build.py
+          python tools/test_pc.py
+
+      - name: Compilar Luna
+        run: |
+          sudo apt-get update && sudo apt-get install -y zlib1g-dev
+          git clone --depth 1 https://github.com/ndless-nspire/Luna.git luna-src
+          make -C luna-src
+
+      - name: Convertir a .tns
+        run: |
+          cd dist
+          ../luna-src/luna EngSolver.py EngSolver.tns
+          ../luna-src/luna EngSolver_lite.py EngSolver_lite.tns
+          ../luna-src/luna EngTest.py EngTest.tns
+          cd modular
+          ../../luna-src/luna main.py config.py vectores.py matrices.py \
+            expresion.py geometria.py elementos.py estatica2d.py \
+            solucionador.py graficos.py entrada.py guardar.py ejemplos.py \
+            editor.py herramientas.py pruebas.py interfaz.py \
+            ../EngSolver_modular.tns
+          cd ..
+          ls -la *.tns
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EngineeringSolver-tns
+          path: dist/*.tns

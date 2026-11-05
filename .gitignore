@@ -1,0 +1,4 @@
+docs/capturas/
+__pycache__/
+*.pyc
+luna-src/
